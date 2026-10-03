@@ -149,20 +149,20 @@ export default function Home() {
   const totalShown = `${filtered.length} / ${list.length} channels`;
 
   return (
-    <main className="min-h-screen max-w-6xl mx-auto px-4 pb-16 text-lg">
-      <header className="flex items-center justify-between py-5">
-        <div className="flex items-center gap-3">
-          <span className="p-3 rounded-2xl bg-blue-600 text-white">
+    <main className="min-h-screen max-w-6xl mx-auto px-4 pb-16 text-lg overflow-x-clip">
+      <header className="flex items-center justify-between gap-3 py-5">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="p-3 rounded-2xl bg-blue-600 text-white shrink-0">
             <Tv className="w-7 h-7" />
           </span>
-          <div>
-            <h1 className="text-2xl font-bold leading-tight">Faizan TV</h1>
-            <p className="text-sm opacity-60">Apni playlist lao, kahin bhi dekho.</p>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold leading-tight truncate">Faizan TV</h1>
+            <p className="text-sm opacity-60 truncate">Apni playlist lao, kahin bhi dekho.</p>
           </div>
         </div>
         <button
           onClick={() => setDark((d) => !d)}
-          className="p-3 rounded-2xl border border-slate-300 dark:border-slate-700 min-w-[52px] min-h-[52px] grid place-items-center"
+          className="p-3 rounded-2xl border border-slate-300 dark:border-slate-700 min-w-[52px] min-h-[52px] grid place-items-center shrink-0"
           aria-label="Theme badlo"
         >
           {dark ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
@@ -207,7 +207,7 @@ export default function Home() {
             placeholder="Apna M3U link paste karo"
             className="flex-1 min-w-0 bg-transparent border-2 border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-3 text-lg outline-none"
           />
-          <button onClick={addSource} className="p-3 rounded-2xl bg-blue-600 text-white min-w-[56px] min-h-[56px] grid place-items-center" aria-label="Playlist jodo">
+            <button onClick={addSource} className="p-3 rounded-2xl bg-blue-600 text-white min-w-[56px] min-h-[56px] grid place-items-center shrink-0" aria-label="Playlist jodo">
             <Plus className="w-7 h-7" />
           </button>
         </div>
@@ -265,7 +265,7 @@ export default function Home() {
           {filtered.map((c) => {
             const isFav = favs.includes(c.url);
             return (
-              <div key={c.url} className="flex items-center gap-3 p-3 rounded-2xl border-2 min-h-[72px] border-slate-200 dark:border-slate-800">
+              <div key={c.url} className="flex items-center gap-3 p-3 rounded-2xl border-2 min-h-[72px] max-w-full overflow-hidden border-slate-200 dark:border-slate-800">
                 <button onClick={() => openChannel(c)} className="flex items-center gap-3 flex-1 min-w-0 text-left" aria-label={c.name}>
                   {c.logo ? (
                     <img src={c.logo} alt="" loading="lazy" className="w-12 h-12 rounded-xl object-contain bg-white shrink-0" />

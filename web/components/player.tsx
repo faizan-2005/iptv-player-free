@@ -257,7 +257,7 @@ export default function Player({ src }: { src: string }) {
   const live = dur === 0 || !isFinite(dur);
 
   return (
-    <div ref={wrapRef} className="relative w-full aspect-video rounded-2xl bg-black overflow-hidden select-none" onMouseMove={poke}>
+    <div ref={wrapRef} className="relative w-full aspect-video bg-black overflow-hidden select-none" onMouseMove={poke}>
       <video ref={videoRef} playsInline className="w-full h-full" onClick={() => {}} />
 
       <button className="absolute left-0 top-0 bottom-16 w-[30%]" onClick={() => tapZone("left")} aria-label="10 second peeche" />
@@ -271,18 +271,18 @@ export default function Player({ src }: { src: string }) {
 
       {!playing && error === "" && (
         <button onClick={togglePlay} className="absolute inset-0 grid place-items-center" aria-label="Play">
-          <span className="p-5 rounded-full bg-blue-600 text-white shadow-xl">
-            <Play className="w-10 h-10 fill-current" />
+          <span className="p-6 rounded-none bg-blue-600 text-white shadow-xl">
+            <Play className="w-12 h-12 fill-current" />
           </span>
         </button>
       )}
 
       {resumeAt > 0 && error === "" && (
-        <div className="absolute inset-x-0 bottom-24 flex justify-center pointer-events-none">
-          <div className="pointer-events-auto flex items-center gap-2 bg-black/80 rounded-2xl p-2 pl-4">
-            <span className="text-white text-base font-semibold">{fmt(resumeAt)} se dekho?</span>
-            <button onClick={doResume} className="px-4 py-2 rounded-xl bg-blue-600 text-white text-base font-bold">Resume</button>
-            <button onClick={() => setResumeAt(0)} className="p-2 text-white" aria-label="Band karo">
+        <div className="absolute inset-x-0 bottom-24 flex justify-center pointer-events-none px-4">
+          <div className="pointer-events-auto flex items-center gap-2 bg-black/80 p-2 pl-4 max-w-full">
+            <span className="text-white text-lg font-semibold truncate">{fmt(resumeAt)} se dekho?</span>
+            <button onClick={doResume} className="px-5 py-3 bg-blue-600 text-white text-lg font-bold shrink-0">Resume</button>
+            <button onClick={() => setResumeAt(0)} className="p-3 text-white shrink-0" aria-label="Band karo">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -295,7 +295,7 @@ export default function Player({ src }: { src: string }) {
       >
         <div className="bg-gradient-to-t from-black/90 via-black/50 to-transparent px-3 sm:px-4 pt-8 pb-3">
           {!live && (
-            <div className="flex items-center gap-2 text-white text-sm font-semibold">
+            <div className="flex items-center gap-3 text-white text-base font-semibold">
               <span>{fmt(time)}</span>
               <input
                 type="range"
@@ -319,16 +319,16 @@ export default function Player({ src }: { src: string }) {
             </div>
           )}
           <div className="flex items-center gap-1 sm:gap-2 text-white">
-            <button onClick={togglePlay} className="p-3 min-w-[52px] min-h-[52px] grid place-items-center" aria-label={playing ? "Pause" : "Play"}>
+            <button onClick={togglePlay} className="p-3 min-w-[56px] min-h-[56px] grid place-items-center" aria-label={playing ? "Pause" : "Play"}>
               {playing ? <Pause className="w-7 h-7 fill-current" /> : <Play className="w-7 h-7 fill-current" />}
             </button>
-            <button onClick={() => seekBy(-10)} className="p-3 min-w-[52px] min-h-[52px] grid place-items-center" aria-label="10 second peeche">
+            <button onClick={() => seekBy(-10)} className="p-3 min-w-[56px] min-h-[56px] grid place-items-center" aria-label="10 second peeche">
               <RotateCcw className="w-6 h-6" />
             </button>
-            <button onClick={() => seekBy(10)} className="p-3 min-w-[52px] min-h-[52px] grid place-items-center" aria-label="10 second aage">
+            <button onClick={() => seekBy(10)} className="p-3 min-w-[56px] min-h-[56px] grid place-items-center" aria-label="10 second aage">
               <RotateCw className="w-6 h-6" />
             </button>
-            <button onClick={toggleMute} className="p-3 min-w-[52px] min-h-[52px] grid place-items-center" aria-label="Mute">
+            <button onClick={toggleMute} className="p-3 min-w-[56px] min-h-[56px] grid place-items-center" aria-label="Mute">
               {muted || volume === 0 ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
             </button>
             <input
@@ -342,24 +342,24 @@ export default function Player({ src }: { src: string }) {
               aria-label="Volume"
             />
             <div className="flex-1" />
-            <button onClick={() => setMenu(menu === "speed" ? "none" : "speed")} className="p-3 min-w-[52px] min-h-[52px] grid place-items-center relative" aria-label="Speed">
+            <button onClick={() => setMenu(menu === "speed" ? "none" : "speed")} className="p-3 min-w-[56px] min-h-[56px] grid place-items-center relative" aria-label="Speed">
               <Gauge className="w-6 h-6" />
               <span className="absolute bottom-1 text-[10px] font-bold">{rate}x</span>
             </button>
             {levels.length > 1 && (
-              <button onClick={() => setMenu(menu === "quality" ? "none" : "quality")} className="p-3 min-w-[52px] min-h-[52px] grid place-items-center" aria-label="Quality">
+              <button onClick={() => setMenu(menu === "quality" ? "none" : "quality")} className="p-3 min-w-[56px] min-h-[56px] grid place-items-center" aria-label="Quality">
                 <Layers className="w-6 h-6" />
               </button>
             )}
             {audioCount > 1 && (
-              <button onClick={() => setMenu(menu === "audio" ? "none" : "audio")} className="p-3 min-w-[52px] min-h-[52px] grid place-items-center" aria-label="Audio">
+              <button onClick={() => setMenu(menu === "audio" ? "none" : "audio")} className="p-3 min-w-[56px] min-h-[56px] grid place-items-center" aria-label="Audio">
                 <Captions className="w-6 h-6" />
               </button>
             )}
-            <button onClick={togglePip} className="p-3 min-w-[52px] min-h-[52px] hidden sm:grid place-items-center" aria-label="Picture in picture">
+            <button onClick={togglePip} className="p-3 min-w-[56px] min-h-[56px] hidden sm:grid place-items-center" aria-label="Picture in picture">
               <PictureInPicture2 className="w-6 h-6" />
             </button>
-            <button onClick={toggleFull} className="p-3 min-w-[52px] min-h-[52px] grid place-items-center" aria-label="Fullscreen">
+            <button onClick={toggleFull} className="p-3 min-w-[56px] min-h-[56px] grid place-items-center" aria-label="Fullscreen">
               {isFull ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
             </button>
           </div>
@@ -367,20 +367,20 @@ export default function Player({ src }: { src: string }) {
       </div>
 
       {menu !== "none" && (
-        <div className="absolute right-2 bottom-24 bg-black/90 rounded-2xl p-2 min-w-[160px] max-h-[50%] overflow-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="absolute right-2 bottom-24 bg-black/90 p-2 min-w-[180px] max-w-[70%] max-h-[50%] overflow-auto" onClick={(e) => e.stopPropagation()}>
           {menu === "speed" &&
             RATES.map((r) => (
-              <button key={r} onClick={() => changeRate(r)} className={`block w-full text-left px-4 py-3 rounded-xl text-white text-lg font-semibold ${r === rate ? "bg-blue-600" : ""}`}>
+              <button key={r} onClick={() => changeRate(r)} className={`block w-full text-left px-4 py-3 text-white text-lg font-semibold ${r === rate ? "bg-blue-600" : ""}`}>
                 {r}x
               </button>
             ))}
           {menu === "quality" && (
             <>
-              <button onClick={() => changeQuality(-1)} className={`block w-full text-left px-4 py-3 rounded-xl text-white text-lg font-semibold ${quality === -1 ? "bg-blue-600" : ""}`}>
+              <button onClick={() => changeQuality(-1)} className={`block w-full text-left px-4 py-3 text-white text-lg font-semibold ${quality === -1 ? "bg-blue-600" : ""}`}>
                 Auto
               </button>
               {levels.map((l) => (
-                <button key={l.index} onClick={() => changeQuality(l.index)} className={`block w-full text-left px-4 py-3 rounded-xl text-white text-lg font-semibold ${quality === l.index ? "bg-blue-600" : ""}`}>
+                <button key={l.index} onClick={() => changeQuality(l.index)} className={`block w-full text-left px-4 py-3 text-white text-lg font-semibold ${quality === l.index ? "bg-blue-600" : ""}`}>
                   {l.label}
                 </button>
               ))}
@@ -388,7 +388,7 @@ export default function Player({ src }: { src: string }) {
           )}
           {menu === "audio" &&
             Array.from({ length: audioCount }).map((_, i) => (
-              <button key={i} onClick={() => changeAudio(i)} className={`block w-full text-left px-4 py-3 rounded-xl text-white text-lg font-semibold ${audioTrack === i ? "bg-blue-600" : ""}`}>
+              <button key={i} onClick={() => changeAudio(i)} className={`block w-full text-left px-4 py-3 text-white text-lg font-semibold ${audioTrack === i ? "bg-blue-600" : ""}`}>
                 Audio {i + 1}
               </button>
             ))}
