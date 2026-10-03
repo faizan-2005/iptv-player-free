@@ -2,6 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   @apply bg-white text-slate-900 dark:bg-[#0B0F19] dark:text-slate-100;
+  padding-bottom: env(safe-area-inset-bottom);
+  overscroll-behavior-y: none;
+}
+
+.ftv-seek,
+.ftv-vol {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 28px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ftv-seek::-webkit-slider-runnable-track,
+.ftv-vol::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.ftv-seek::-webkit-slider-thumb,
+.ftv-vol::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #fff;
+  margin-top: -8px;
+}
+
+.ftv-seek::-moz-range-track,
+.ftv-vol::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.ftv-seek::-moz-range-thumb,
+.ftv-vol::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 999px;
+  background: #fff;
 }
