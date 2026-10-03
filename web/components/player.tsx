@@ -1,7 +1,7 @@
 "use client";
 
 import Hls from "hls.js";
-import { Captions, Gauge, Layers, Maximize, Minimize, Pause, PictureInPicture2, Play, RotateCcw, RotateCw, Volume2, VolumeX, X } from "lucide-react";
+import { Captions, Gauge, Layers, Maximize, Minimize, Pause, PictureInPicture2, Play, Volume2, VolumeX, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type Level = { index: number; label: string };
@@ -28,8 +28,6 @@ export default function Player({ src }: { src: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const tapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastTap = useRef<{ side: string; at: number }>({ side: "", at: 0 });
   const saveTimer = useRef(0);
 
   const [playing, setPlaying] = useState(false);
@@ -47,9 +45,9 @@ export default function Player({ src }: { src: string }) {
   const [menu, setMenu] = useState<"none" | "speed" | "quality" | "audio">("none");
   const [resumeAt, setResumeAt] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [flash, setFlash] = useState("");
   const [error, setError] = useState("");
-  const [isFull, setIsFull] = useState(false);
+  const [theater, setTheater] = useState(false);
+  const [portrait, setPortrait] = useState(false);
 
   const poke = useCallback(() => {
     setControls(true);
@@ -59,6 +57,21 @@ export default function Player({ src }: { src: string }) {
       setMenu("none");
     }, 3500);
   }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(orientation: portrait)");
+    const upd = () => setPortrait(mq.matches);
+    upd();
+    mq.addEventListener("change", upd);
+    return () => mq.removeEventListener("change", upd);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = theater ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [theater]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -109,7 +122,9 @@ export default function Player({ src }: { src: string }) {
         } catch {}
       }
     };
-    const onFull = () => setIsFull(document.fullscreenElement != null);
+    video.addEventListener("timeupdate", onTime);
+    video.addEventListener("error", () => fail("Stream nahi chal raha. Dusra channel try karo."));
+    document.addEventListener("fullscreenchange", () => setTheater(document.fullscreenElement != null));
 
     video.addEventListener("loadedmetadata", onMeta);
     video.addEventListener("play", onPlay);
@@ -121,7 +136,6 @@ export default function Player({ src }: { src: string }) {
     video.addEventListener("ratechange", onRate);
     video.addEventListener("timeupdate", onTime);
     video.addEventListener("error", () => fail("Stream nahi chal raha. Dusra channel try karo."));
-    document.addEventListener("fullscreenchange", onFull);
 
     video.playsInline = true;
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
@@ -161,7 +175,6 @@ export default function Player({ src }: { src: string }) {
       video.removeEventListener("volumechange", onVol);
       video.removeEventListener("ratechange", onRate);
       video.removeEventListener("timeupdate", onTime);
-      document.removeEventListener("fullscreenchange", onFull);
       if (hideTimer.current) clearTimeout(hideTimer.current);
       try {
         localStorage.setItem(posKey(src), String(Math.floor(video.currentTime)));
@@ -187,34 +200,16 @@ export default function Player({ src }: { src: string }) {
     poke();
   }
 
-  function seekBy(delta: number) {
-    const v = videoRef.current;
-    if (!v) return;
-    v.currentTime = Math.min(Math.max(0, v.currentTime + delta), v.duration || 0);
-    setFlash(delta > 0 ? `+${delta}s` : `${delta}s`);
-    setTimeout(() => setFlash(""), 700);
-    poke();
-  }
-
-  function tapZone(side: "left" | "right") {
-    const now = Date.now();
-    if (lastTap.current.side === side && now - lastTap.current.at < 320) {
-      if (tapTimer.current) clearTimeout(tapTimer.current);
-      lastTap.current = { side: "", at: 0 };
-      seekBy(side === "left" ? -10 : 10);
-      return;
-    }
-    lastTap.current = { side, at: now };
-    tapTimer.current = setTimeout(() => {
-      setControls((c) => {
-        if (c) {
-          if (hideTimer.current) clearTimeout(hideTimer.current);
-          return false;
-        }
-        poke();
-        return true;
-      });
-    }, 300);
+  function toggleControls() {
+    setControls((c) => {
+      if (c) {
+        if (hideTimer.current) clearTimeout(hideTimer.current);
+        setMenu("none");
+        return false;
+      }
+      poke();
+      return true;
+    });
   }
 
   function changeVolume(v: number) {
@@ -257,10 +252,14 @@ export default function Player({ src }: { src: string }) {
   }
 
   function toggleFull() {
-    const el = wrapRef.current;
-    if (!el) return;
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    else el.requestFullscreen().catch(() => {});
+    const next = !theater;
+    setTheater(next);
+    setMenu("none");
+    try {
+      const o = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void>; unlock?: () => void };
+      if (next) o.lock?.("landscape").catch(() => {});
+      else o.unlock?.();
+    } catch {}
     poke();
   }
 
@@ -286,12 +285,15 @@ export default function Player({ src }: { src: string }) {
 
   const live = dur === 0 || !isFinite(dur);
 
-  return (
-    <div ref={wrapRef} className="relative w-full aspect-video bg-black overflow-hidden select-none" onMouseMove={poke}>
-      <video ref={videoRef} playsInline className="w-full h-full" onClick={() => {}} />
+  const shell = theater
+    ? "fixed inset-0 z-[100] bg-black grid place-items-center overflow-hidden"
+    : "relative w-full aspect-video bg-black overflow-hidden";
+  const stage = theater && portrait ? "w-[100dvh] h-[100dvw] shrink-0 rotate-90" : theater ? "w-full h-full" : "w-full h-full";
 
-      <button className="absolute left-0 top-0 bottom-16 w-[30%]" onClick={() => tapZone("left")} aria-label="10 second peeche" />
-      <button className="absolute right-0 top-0 bottom-16 w-[30%]" onClick={() => tapZone("right")} aria-label="10 second aage" />
+  return (
+    <div ref={wrapRef} className={`${shell} select-none`} onMouseMove={poke}>
+      <div className={`relative ${stage} bg-black overflow-hidden`}>
+      <video ref={videoRef} playsInline className="w-full h-full" onClick={toggleControls} />
 
       {loading && error === "" && (
         <div className="absolute inset-0 grid place-items-center pointer-events-none">
@@ -303,12 +305,6 @@ export default function Player({ src }: { src: string }) {
         <button onClick={toggleMute} className="absolute top-3 right-3 flex items-center gap-2 bg-black/70 px-4 py-3 text-white text-lg font-bold" aria-label="Sound on karo">
           <VolumeX className="w-6 h-6" /> Sound On
         </button>
-      )}
-
-      {flash !== "" && (
-        <div className="absolute inset-0 grid place-items-center pointer-events-none">
-          <span className="px-5 py-2 rounded-full bg-black/70 text-white text-xl font-bold">{flash}</span>
-        </div>
       )}
 
       {!playing && !loading && error === "" && (
@@ -364,12 +360,6 @@ export default function Player({ src }: { src: string }) {
             <button onClick={togglePlay} className="p-3 min-w-[56px] min-h-[56px] grid place-items-center" aria-label={playing ? "Pause" : "Play"}>
               {playing ? <Pause className="w-7 h-7 fill-current" /> : <Play className="w-7 h-7 fill-current" />}
             </button>
-            <button onClick={() => seekBy(-10)} className="p-3 min-w-[56px] min-h-[56px] grid place-items-center" aria-label="10 second peeche">
-              <RotateCcw className="w-6 h-6" />
-            </button>
-            <button onClick={() => seekBy(10)} className="p-3 min-w-[56px] min-h-[56px] grid place-items-center" aria-label="10 second aage">
-              <RotateCw className="w-6 h-6" />
-            </button>
             <button onClick={toggleMute} className="p-3 min-w-[56px] min-h-[56px] grid place-items-center" aria-label="Mute">
               {muted || volume === 0 ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
             </button>
@@ -402,7 +392,7 @@ export default function Player({ src }: { src: string }) {
               <PictureInPicture2 className="w-6 h-6" />
             </button>
             <button onClick={toggleFull} className="p-3 min-w-[56px] min-h-[56px] grid place-items-center" aria-label="Fullscreen">
-              {isFull ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
+              {theater ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
             </button>
           </div>
         </div>
@@ -442,6 +432,7 @@ export default function Player({ src }: { src: string }) {
           <p className="text-white text-lg font-semibold">{error}</p>
         </div>
       )}
+      </div>
     </div>
   );
 }
