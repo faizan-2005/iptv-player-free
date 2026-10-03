@@ -46,9 +46,7 @@ export default function Player({ src }: { src: string }) {
   const [resumeAt, setResumeAt] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [theater, setTheater] = useState(false);
-  const [portrait, setPortrait] = useState(false);
-  const [vp, setVp] = useState({ w: 0, h: 0 });
+  const [isFull, setIsFull] = useState(false);
 
   const poke = useCallback(() => {
     setControls(true);
@@ -60,27 +58,10 @@ export default function Player({ src }: { src: string }) {
   }, []);
 
   useEffect(() => {
-    const updVp = () => setVp({ w: window.innerWidth, h: window.innerHeight });
-    updVp();
-    const mq = window.matchMedia("(orientation: portrait)");
-    const upd = () => setPortrait(mq.matches);
-    upd();
-    mq.addEventListener("change", upd);
-    window.addEventListener("resize", updVp);
-    window.addEventListener("orientationchange", updVp);
-    return () => {
-      mq.removeEventListener("change", upd);
-      window.removeEventListener("resize", updVp);
-      window.removeEventListener("orientationchange", updVp);
-    };
+    const onFull = () => setIsFull(document.fullscreenElement != null);
+    document.addEventListener("fullscreenchange", onFull);
+    return () => document.removeEventListener("fullscreenchange", onFull);
   }, []);
-
-  useEffect(() => {
-    document.body.style.overflow = theater ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [theater]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -131,10 +112,6 @@ export default function Player({ src }: { src: string }) {
         } catch {}
       }
     };
-    video.addEventListener("timeupdate", onTime);
-    video.addEventListener("error", () => fail("Stream nahi chal raha. Dusra channel try karo."));
-    document.addEventListener("fullscreenchange", () => setTheater(document.fullscreenElement != null));
-
     video.addEventListener("loadedmetadata", onMeta);
     video.addEventListener("play", onPlay);
     video.addEventListener("pause", onPause);
@@ -261,14 +238,17 @@ export default function Player({ src }: { src: string }) {
   }
 
   function toggleFull() {
-    const next = !theater;
-    setTheater(next);
-    setMenu("none");
-    try {
-      const o = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void>; unlock?: () => void };
-      if (next) o.lock?.("landscape").catch(() => {});
-      else o.unlock?.();
-    } catch {}
+    const el = wrapRef.current;
+    if (!el) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      el.requestFullscreen().catch(() => {});
+      try {
+        const o = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
+        o.lock?.("landscape").catch(() => {});
+      } catch {}
+    }
     poke();
   }
 
@@ -294,16 +274,9 @@ export default function Player({ src }: { src: string }) {
 
   const live = dur === 0 || !isFinite(dur);
 
-  const land = theater && portrait && vp.w > 0;
-  const shell = theater
-    ? "fixed inset-0 z-[100] bg-black grid place-items-center overflow-hidden"
-    : "relative w-full aspect-video bg-black overflow-hidden";
-  const stage = land ? "shrink-0 rotate-90" : "w-full h-full";
-  const stageStyle = land ? { width: vp.h, height: vp.w } : undefined;
-
   return (
-    <div ref={wrapRef} className={`${shell} select-none`} onMouseMove={poke}>
-      <div className={`relative ${stage} bg-black overflow-hidden`} style={stageStyle}>
+    <div ref={wrapRef} className="relative w-full aspect-video bg-black overflow-hidden select-none" onMouseMove={poke}>
+      <div className="relative w-full h-full bg-black overflow-hidden">
       <video ref={videoRef} playsInline className="w-full h-full" onClick={toggleControls} />
 
       {loading && error === "" && (
@@ -403,7 +376,7 @@ export default function Player({ src }: { src: string }) {
               <PictureInPicture2 className="w-6 h-6" />
             </button>
             <button onClick={toggleFull} className="p-3 min-w-[56px] min-h-[56px] grid place-items-center" aria-label="Fullscreen">
-              {theater ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
+              {isFull ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
             </button>
           </div>
         </div>
