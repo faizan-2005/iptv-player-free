@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import '../../core/icons/app_icons.dart';
 
 class HomeShell extends StatelessWidget {
   const HomeShell({super.key, required this.shell});
