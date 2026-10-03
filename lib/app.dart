@@ -4,11 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'core/backend/supabase_bootstrap.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode_store.dart';
+import 'features/downloads/downloads_screen.dart';
 import 'features/guide/guide_screen.dart';
 import 'features/home/home_shell.dart';
 import 'features/live/live_screen.dart';
 import 'features/player/player_screen.dart';
 import 'features/playlist/playlist_sources_screen.dart';
+import 'features/profiles/profiles_screen.dart';
 import 'features/series/series_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/vod/vod_screen.dart';
@@ -38,6 +40,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(path: '/sources', builder: (c, s) => const PlaylistSourcesScreen()),
+      GoRoute(path: '/profiles', builder: (c, s) => const ProfilesScreen()),
+      GoRoute(path: '/downloads', builder: (c, s) => const DownloadsScreen()),
       GoRoute(
         path: '/player',
         builder: (c, s) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/theme/theme_mode_store.dart';
 
@@ -33,6 +34,16 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: Column(
+              children: [
+                ListTile(leading: const Icon(LucideIcons.users), title: const Text('Profiles'), trailing: const Icon(LucideIcons.chevronRight), onTap: () => context.push('/profiles')),
+                ListTile(leading: const Icon(LucideIcons.download), title: const Text('Downloads'), trailing: const Icon(LucideIcons.chevronRight), onTap: () => context.push('/downloads')),
+                ListTile(leading: const Icon(LucideIcons.listVideo), title: const Text('Sources'), trailing: const Icon(LucideIcons.chevronRight), onTap: () => context.push('/sources')),
+              ],
             ),
           ),
           const SizedBox(height: 12),

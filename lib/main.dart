@@ -10,6 +10,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
   await Hive.initFlutter();
+  for (final name in ['sources', 'favorites', 'history', 'profiles', 'downloads']) {
+    if (!Hive.isBoxOpen(name)) await Hive.openBox(name);
+  }
   final prefs = await SharedPreferences.getInstance();
   runApp(
     ProviderScope(

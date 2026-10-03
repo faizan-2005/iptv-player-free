@@ -61,7 +61,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 itemCount: lib.groups.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
                 itemBuilder: (context, i) {
                   final g = lib.groups[i];
                   final selected = g == group;
