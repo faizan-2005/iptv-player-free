@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, Moon, Play, Plus, Search, Sun, Tv, X } from "lucide-react";
+import { Heart, Moon, Play, Plus, Search, Sun, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { proxyUrl } from "../lib/playback";
@@ -153,9 +153,7 @@ export default function Home() {
     <main className="min-h-screen max-w-6xl mx-auto px-4 pb-16 text-lg overflow-x-clip">
       <header className="flex items-center justify-between gap-3 py-5">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="p-3 rounded-2xl bg-blue-600 text-white shrink-0">
-            <Tv className="w-7 h-7" />
-          </span>
+          <img src="logo.png" alt="Faizan TV" className="w-14 h-14 rounded-2xl object-cover shrink-0" />
           <div className="min-w-0">
             <h1 className="text-2xl font-bold leading-tight truncate">Faizan TV</h1>
             <p className="text-sm opacity-60 truncate">Apni playlist lao, kahin bhi dekho.</p>

@@ -27,9 +27,7 @@ function PlayInner() {
           <Link href="/" className="p-3 rounded-2xl border border-slate-300 dark:border-slate-700 min-w-[52px] min-h-[52px] grid place-items-center shrink-0" aria-label="Wapas">
             <ArrowLeft className="w-6 h-6" />
           </Link>
-          <span className="p-3 rounded-2xl bg-blue-600 text-white shrink-0">
-            <Tv className="w-7 h-7" />
-          </span>
+          <img src="logo.png" alt="Faizan TV" className="w-14 h-14 rounded-2xl object-cover shrink-0" />
           <h1 className="text-2xl font-bold truncate min-w-0">Faizan TV</h1>
         </div>
         <button

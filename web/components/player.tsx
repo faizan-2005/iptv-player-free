@@ -33,7 +33,7 @@ export default function Player({ src }: { src: string }) {
   const saveTimer = useRef(0);
 
   const [playing, setPlaying] = useState(false);
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(1);
   const [rate, setRate] = useState(1);
   const [time, setTime] = useState(0);
@@ -123,17 +123,16 @@ export default function Player({ src }: { src: string }) {
     video.addEventListener("error", () => fail("Stream nahi chal raha. Dusra channel try karo."));
     document.addEventListener("fullscreenchange", onFull);
 
-    video.muted = true;
     video.playsInline = true;
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = src;
-      video.play().catch(() => {});
+      startPlayback();
     } else if (Hls.isSupported()) {
       const hls = new Hls({ maxBufferLength: 30 });
       hlsRef.current = hls;
       hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
         setLevels(data.levels.map((l, i) => ({ index: i, label: l.height ? `${l.height}p` : `${Math.round(l.bitrate / 1000)}k` })));
-        video.play().catch(() => {});
+        startPlayback();
       });
       hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, (_e, data) => setAudioCount(data.audioTracks.length));
       hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (_e, data) => setAudioTrack(data.id));
@@ -146,7 +145,7 @@ export default function Player({ src }: { src: string }) {
       hls.attachMedia(video);
     } else {
       video.src = src;
-      video.play().catch(() => {});
+      startPlayback();
     }
     poke();
 
@@ -169,6 +168,16 @@ export default function Player({ src }: { src: string }) {
       } catch {}
     };
   }, [src, poke]);
+
+  function startPlayback() {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = false;
+    video.play().catch(() => {
+      video.muted = true;
+      video.play().catch(() => {});
+    });
+  }
 
   function togglePlay() {
     const v = videoRef.current;
@@ -288,6 +297,12 @@ export default function Player({ src }: { src: string }) {
         <div className="absolute inset-0 grid place-items-center pointer-events-none">
           <span className="w-16 h-16 rounded-full border-4 border-white/20 border-t-white animate-spin" />
         </div>
+      )}
+
+      {muted && playing && error === "" && (
+        <button onClick={toggleMute} className="absolute top-3 right-3 flex items-center gap-2 bg-black/70 px-4 py-3 text-white text-lg font-bold" aria-label="Sound on karo">
+          <VolumeX className="w-6 h-6" /> Sound On
+        </button>
       )}
 
       {flash !== "" && (
