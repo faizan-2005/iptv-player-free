@@ -32,7 +32,7 @@ function parseM3u(content: string): Channel[] {
       logo = attr(line, "tvg-logo");
       group = attr(line, "group-title") || "General";
     } else if (!line.startsWith("#")) {
-      if (line.startsWith("http")) {
+      if (line.startsWith("http") || line.startsWith("/api/stream?url=")) {
         out.push({ name: name || `Channel ${out.length + 1}`, url: line, logo, group });
       }
       name = "";
@@ -51,6 +51,10 @@ export default function Home() {
   const [activeTitle, setActiveTitle] = useState("");
   const [m3u, setM3u] = useState("");
   const [loading, setLoading] = useState(false);
+  const [proxy, setProxy] = useState(true);
+  const [loadError, setLoadError] = useState("");
+
+  const playSrc = proxy && activeUrl.startsWith("http") ? `/api/stream?url=${encodeURIComponent(activeUrl)}` : activeUrl;
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
@@ -60,9 +64,17 @@ export default function Home() {
     const url = m3u.trim();
     if (!url) return;
     setLoading(true);
+    setLoadError("");
     try {
-      const res = await fetch(url);
-      const text = await res.text();
+      let text = "";
+      try {
+        text = await (await fetch(url)).text();
+      } catch {
+        text = await (await fetch(`/api/stream?url=${encodeURIComponent(url)}`)).text();
+      }
+      if (!text.includes("#EXTINF") && !text.includes("#EXTM3U")) {
+        throw new Error("bad playlist");
+      }
       const parsed = parseM3u(text);
       setChannels(parsed);
       if (parsed.length > 0) {
@@ -71,6 +83,7 @@ export default function Home() {
       }
     } catch {
       setChannels([]);
+      setLoadError("Playlist load nahi hui. URL check karo ya dusra M3U try karo.");
     } finally {
       setLoading(false);
       setM3u("");
@@ -121,6 +134,7 @@ export default function Home() {
             </button>
           </div>
           <p className="text-xs mt-3 opacity-70">Player only. Bring your own M3U. {loading ? "Loading..." : `${channels.length} channels`}</p>
+          {loadError !== "" && <p className="text-xs text-red-500 mt-1">{loadError}</p>}
           <div className="mt-4 space-y-2 max-h-[520px] overflow-auto">
             {filtered.map((c) => (
               <button
@@ -152,8 +166,16 @@ export default function Home() {
         <section className="rounded-2xl border border-slate-200 dark:border-slate-800 p-4">
           {activeUrl ? (
             <>
-              <h2 className="text-sm font-medium mb-2 truncate">{activeTitle}</h2>
-              <Player src={activeUrl} />
+              <div className="flex items-center justify-between mb-2 gap-2">
+                <h2 className="text-sm font-medium truncate">{activeTitle}</h2>
+                <button
+                  onClick={() => setProxy((p) => !p)}
+                  className={`text-xs px-3 py-1 rounded-full border ${proxy ? "bg-blue-600 text-white border-blue-600" : "border-slate-300 dark:border-slate-700"}`}
+                >
+                  Proxy {proxy ? "On" : "Off"}
+                </button>
+              </div>
+              <Player key={playSrc} src={playSrc} />
             </>
           ) : (
             <div className="aspect-video grid place-items-center text-sm opacity-70">Add a playlist to start</div>
