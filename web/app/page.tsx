@@ -3,6 +3,7 @@
 import { Heart, Moon, Play, Plus, Search, Sun, Tv, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { proxyUrl } from "../lib/playback";
 
 type Channel = {
   name: string;
@@ -103,7 +104,7 @@ export default function Home() {
       try {
         text = await (await fetch(url)).text();
       } catch {
-        text = await (await fetch(`/api/stream?url=${encodeURIComponent(url)}`)).text();
+        text = await (await fetch(proxyUrl(url))).text();
       }
       if (!text.includes("#EXTM3U")) throw new Error("bad playlist");
       const parsed = parseM3u(text);
