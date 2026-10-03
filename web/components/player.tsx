@@ -48,6 +48,7 @@ export default function Player({ src }: { src: string }) {
   const [error, setError] = useState("");
   const [theater, setTheater] = useState(false);
   const [portrait, setPortrait] = useState(false);
+  const [vp, setVp] = useState({ w: 0, h: 0 });
 
   const poke = useCallback(() => {
     setControls(true);
@@ -59,11 +60,19 @@ export default function Player({ src }: { src: string }) {
   }, []);
 
   useEffect(() => {
+    const updVp = () => setVp({ w: window.innerWidth, h: window.innerHeight });
+    updVp();
     const mq = window.matchMedia("(orientation: portrait)");
     const upd = () => setPortrait(mq.matches);
     upd();
     mq.addEventListener("change", upd);
-    return () => mq.removeEventListener("change", upd);
+    window.addEventListener("resize", updVp);
+    window.addEventListener("orientationchange", updVp);
+    return () => {
+      mq.removeEventListener("change", upd);
+      window.removeEventListener("resize", updVp);
+      window.removeEventListener("orientationchange", updVp);
+    };
   }, []);
 
   useEffect(() => {
@@ -285,14 +294,16 @@ export default function Player({ src }: { src: string }) {
 
   const live = dur === 0 || !isFinite(dur);
 
+  const land = theater && portrait && vp.w > 0;
   const shell = theater
     ? "fixed inset-0 z-[100] bg-black grid place-items-center overflow-hidden"
     : "relative w-full aspect-video bg-black overflow-hidden";
-  const stage = theater && portrait ? "w-[100dvh] h-[100dvw] shrink-0 rotate-90" : theater ? "w-full h-full" : "w-full h-full";
+  const stage = land ? "shrink-0 rotate-90" : "w-full h-full";
+  const stageStyle = land ? { width: vp.h, height: vp.w } : undefined;
 
   return (
     <div ref={wrapRef} className={`${shell} select-none`} onMouseMove={poke}>
-      <div className={`relative ${stage} bg-black overflow-hidden`}>
+      <div className={`relative ${stage} bg-black overflow-hidden`} style={stageStyle}>
       <video ref={videoRef} playsInline className="w-full h-full" onClick={toggleControls} />
 
       {loading && error === "" && (
