@@ -5,12 +5,14 @@ class SupabaseBootstrap {
 
   static Future<void> initOptional() async {
     const url = String.fromEnvironment('SUPABASE_URL', defaultValue: '');
-    const key = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
+    const publishable = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY', defaultValue: '');
+    const legacy = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: '');
+    final key = publishable.isNotEmpty ? publishable : legacy;
     if (url.isEmpty || key.isEmpty) {
       enabled = false;
       return;
     }
-    await Supabase.initialize(url: url, anonKey: key);
+    await Supabase.initialize(url: url, publishableKey: key);
     enabled = true;
   }
 

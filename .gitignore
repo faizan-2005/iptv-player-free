@@ -44,6 +44,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 .env
+.env.local
+web/.env.local
 web/node_modules/
 web/.next/
 web/out/
