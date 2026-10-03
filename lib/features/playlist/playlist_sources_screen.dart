@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../core/models/playlist_source.dart';
+import '../../core/state/library_controller.dart';
 import '../../core/storage/local_store.dart';
 
-class PlaylistSourcesScreen extends StatefulWidget {
+class PlaylistSourcesScreen extends ConsumerStatefulWidget {
   const PlaylistSourcesScreen({super.key});
 
   @override
-  State<PlaylistSourcesScreen> createState() => _PlaylistSourcesScreenState();
+  ConsumerState<PlaylistSourcesScreen> createState() => _PlaylistSourcesScreenState();
 }
 
-class _PlaylistSourcesScreenState extends State<PlaylistSourcesScreen> {
+class _PlaylistSourcesScreenState extends ConsumerState<PlaylistSourcesScreen> {
   final nameController = TextEditingController();
   final m3uController = TextEditingController();
   final serverController = TextEditingController();
@@ -45,6 +47,7 @@ class _PlaylistSourcesScreenState extends State<PlaylistSourcesScreen> {
       epgUrl: epgController.text.trim(),
     );
     await LocalStore.sources.put(id, source.toMap());
+    await ref.read(libraryProvider.notifier).loadSource(source);
     if (mounted) Navigator.pop(context);
   }
 

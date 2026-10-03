@@ -1,32 +1,86 @@
 "use client";
 
-import { Clapperboard, Layers, Moon, Plus, Search, Server, Sun, Tv } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Clapperboard, Layers, Moon, Play, Plus, Search, Server, Sun, Tv } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import Player from "../components/player";
 
-type Source = {
-  id: string;
+type Channel = {
   name: string;
   url: string;
+  logo: string;
+  group: string;
 };
+
+function parseM3u(content: string): Channel[] {
+  const lines = content.split("\n").map((l) => l.trim()).filter(Boolean);
+  const out: Channel[] = [];
+  let name = "";
+  let logo = "";
+  let group = "";
+  const attr = (line: string, key: string) => {
+    const needle = `${key}="`;
+    const start = line.indexOf(needle);
+    if (start < 0) return "";
+    const rest = line.slice(start + needle.length);
+    const end = rest.indexOf('"');
+    return end < 0 ? "" : rest.slice(0, end);
+  };
+  for (const line of lines) {
+    if (line.startsWith("#EXTINF")) {
+      const idx = line.lastIndexOf(",");
+      name = idx >= 0 ? line.slice(idx + 1).trim() : "";
+      logo = attr(line, "tvg-logo");
+      group = attr(line, "group-title") || "General";
+    } else if (!line.startsWith("#")) {
+      if (line.startsWith("http")) {
+        out.push({ name: name || `Channel ${out.length + 1}`, url: line, logo, group });
+      }
+      name = "";
+      logo = "";
+      group = "";
+    }
+  }
+  return out;
+}
 
 export default function Home() {
   const [dark, setDark] = useState(true);
   const [query, setQuery] = useState("");
-  const [sources, setSources] = useState<Source[]>([]);
+  const [channels, setChannels] = useState<Channel[]>([]);
   const [activeUrl, setActiveUrl] = useState("");
+  const [activeTitle, setActiveTitle] = useState("");
   const [m3u, setM3u] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
   }, [dark]);
 
-  function addSource() {
-    if (!m3u.trim()) return;
-    setSources((s) => [...s, { id: `${Date.now()}`, name: "My playlist", url: m3u.trim() }]);
-    setActiveUrl(m3u.trim());
-    setM3u("");
+  async function addSource() {
+    const url = m3u.trim();
+    if (!url) return;
+    setLoading(true);
+    try {
+      const res = await fetch(url);
+      const text = await res.text();
+      const parsed = parseM3u(text);
+      setChannels(parsed);
+      if (parsed.length > 0) {
+        setActiveUrl(parsed[0].url);
+        setActiveTitle(parsed[0].name);
+      }
+    } catch {
+      setChannels([]);
+    } finally {
+      setLoading(false);
+      setM3u("");
+    }
   }
+
+  const filtered = useMemo(() => {
+    const q = query.toLowerCase();
+    return channels.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 300);
+  }, [channels, query]);
 
   return (
     <main className="min-h-screen p-4 max-w-5xl mx-auto">
@@ -44,7 +98,7 @@ export default function Home() {
         </button>
       </header>
 
-      <div className="grid md:grid-cols-[320px_1fr] gap-4">
+      <div className="grid md:grid-cols-[340px_1fr] gap-4">
         <section className="rounded-2xl border border-slate-200 dark:border-slate-800 p-4">
           <div className="flex items-center gap-2 border rounded-xl px-3 py-2">
             <Search className="w-4 h-4" />
@@ -66,16 +120,24 @@ export default function Home() {
               <Plus className="w-5 h-5" />
             </button>
           </div>
-          <p className="text-xs mt-3 opacity-70">Player only. Bring your own M3U or Xtream login.</p>
-          <div className="mt-4 space-y-2">
-            {sources.map((s) => (
+          <p className="text-xs mt-3 opacity-70">Player only. Bring your own M3U. {loading ? "Loading..." : `${channels.length} channels`}</p>
+          <div className="mt-4 space-y-2 max-h-[520px] overflow-auto">
+            {filtered.map((c) => (
               <button
-                key={s.id}
-                onClick={() => setActiveUrl(s.url)}
-                className="w-full flex items-center gap-2 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-left"
+                key={c.url}
+                onClick={() => {
+                  setActiveUrl(c.url);
+                  setActiveTitle(c.name);
+                }}
+                className="w-full flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-left"
               >
-                <Server className="w-4 h-4" />
-                <span className="text-sm truncate">{s.name}</span>
+                <span className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800">
+                  <Play className="w-4 h-4" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm truncate">{c.name}</span>
+                  <span className="block text-xs opacity-60">{c.group}</span>
+                </span>
               </button>
             ))}
           </div>
@@ -83,11 +145,19 @@ export default function Home() {
             <span className="flex items-center gap-1"><Tv className="w-3 h-3" /> Live</span>
             <span className="flex items-center gap-1"><Clapperboard className="w-3 h-3" /> Movies</span>
             <span className="flex items-center gap-1"><Layers className="w-3 h-3" /> Series</span>
+            <span className="flex items-center gap-1"><Server className="w-3 h-3" /> M3U</span>
           </div>
         </section>
 
         <section className="rounded-2xl border border-slate-200 dark:border-slate-800 p-4">
-          {activeUrl ? <Player src={activeUrl} /> : <div className="aspect-video grid place-items-center text-sm opacity-70">Add a playlist to start</div>}
+          {activeUrl ? (
+            <>
+              <h2 className="text-sm font-medium mb-2 truncate">{activeTitle}</h2>
+              <Player src={activeUrl} />
+            </>
+          ) : (
+            <div className="aspect-video grid place-items-center text-sm opacity-70">Add a playlist to start</div>
+          )}
         </section>
       </div>
     </main>
