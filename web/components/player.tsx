@@ -102,7 +102,7 @@ export default function Player({ src }: { src: string }) {
     video.addEventListener("volumechange", onVol);
     video.addEventListener("ratechange", onRate);
     video.addEventListener("timeupdate", onTime);
-    video.addEventListener("error", () => fail("Stream failed to load. Provider offline ho sakta hai ya stream blocked hai."));
+    video.addEventListener("error", () => fail("Stream nahi chal raha. Dusra channel try karo."));
     document.addEventListener("fullscreenchange", onFull);
 
     video.muted = true;
@@ -121,7 +121,7 @@ export default function Player({ src }: { src: string }) {
       hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (_e, data) => setAudioTrack(data.id));
       hls.on(Hls.Events.ERROR, (_e, data) => {
         if (data.fatal) {
-          fail(data.type === Hls.ErrorTypes.NETWORK_ERROR ? "Network blocked ya provider offline. Proxy On karke try karo." : "Ye stream browser me nahi chal sakta. Android app me try karo.");
+          fail("Stream nahi chal raha. Dusra channel try karo.");
         }
       });
       hls.loadSource(src);

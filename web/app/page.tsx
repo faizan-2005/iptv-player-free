@@ -112,7 +112,7 @@ export default function Home() {
       setGroup("All");
       if (parsed.length > 0) openChannel(parsed[0]);
     } catch {
-      setLoadError("Playlist load nahi hui. URL check karo ya Android app use karo.");
+      setLoadError("Playlist load nahi hui. URL check karo.");
     } finally {
       setLoading(false);
       setM3u("");
