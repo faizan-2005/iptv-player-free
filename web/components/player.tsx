@@ -23,7 +23,7 @@ export default function Player({ src }: { src: string }) {
       const hls = new Hls();
       hls.on(Hls.Events.ERROR, (_e, data) => {
         if (data.fatal) {
-          setError(data.type === Hls.ErrorTypes.NETWORK_ERROR ? "Network blocked or provider offline. Try toggling Proxy." : "This stream cannot be played in browser.");
+          setError(data.type === Hls.ErrorTypes.NETWORK_ERROR ? "Stream blocked hai ya provider offline hai. Android app me try karo." : "Ye stream browser me nahi chal sakta. Android app me try karo.");
         }
       });
       hls.loadSource(src);
