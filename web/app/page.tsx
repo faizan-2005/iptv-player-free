@@ -10,6 +10,13 @@ type Channel = {
   url: string;
   logo: string;
   group: string;
+  country: string[];
+};
+
+type Country = {
+  cc: string;
+  name: string;
+  count: number;
 };
 
 type Tab = "free" | "mine";
@@ -35,7 +42,7 @@ function parseM3u(content: string): Channel[] {
       logo = attr(line, "tvg-logo");
       group = attr(line, "group-title") || "General";
     } else if (!line.startsWith("#") && line.startsWith("http")) {
-      if (name) out.push({ name, url: line, logo, group });
+      if (name) out.push({ name, url: line, logo, group, country: [] });
       name = "";
       logo = "";
       group = "";
@@ -61,6 +68,8 @@ export default function Home() {
   const [onlyFav, setOnlyFav] = useState(false);
   const [favs, setFavs] = useState<string[]>([]);
   const [free, setFree] = useState<Channel[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [country, setCountry] = useState("ALL");
   const [mine, setMine] = useState<Channel[]>([]);
   const [m3u, setM3u] = useState("");
   const [loading, setLoading] = useState(false);
@@ -76,7 +85,10 @@ export default function Home() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d && Array.isArray(d.channels)) {
-          setFree(d.channels.map((c: { n: string; u: string; l: string; g: string }) => ({ name: c.n, url: c.u, logo: c.l, group: c.g })));
+          setFree(d.channels.map((c: { n: string; u: string; l: string; g: string; c?: string[] }) => ({ name: c.n, url: c.u, logo: c.l, group: c.g, country: c.c ?? [] })));
+        }
+        if (d && Array.isArray(d.countries)) {
+          setCountries(d.countries);
         }
       })
       .catch(() => {});
@@ -121,13 +133,20 @@ export default function Home() {
   }
 
   const list = tab === "free" ? free : mine;
-  const groups = useMemo(() => ["All", ...Array.from(new Set(list.map((c) => c.group))).slice(0, 60)], [list]);
+  const groups = useMemo(() => ["All", ...Array.from(new Set(list.map((c) => c.group)))], [list]);
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
     return list
-      .filter((c) => (group === "All" || c.group === group) && (q === "" || c.name.toLowerCase().includes(q)) && (!onlyFav || favs.includes(c.url)))
-      .slice(0, 400);
-  }, [list, query, group, onlyFav, favs]);
+      .filter(
+        (c) =>
+          (country === "ALL" || tab !== "free" || c.country.includes(country)) &&
+          (group === "All" || c.group === group) &&
+          (q === "" || c.name.toLowerCase().includes(q)) &&
+          (!onlyFav || favs.includes(c.url))
+      )
+      .slice(0, 1200);
+  }, [list, query, group, country, tab, onlyFav, favs]);
+  const totalShown = `${filtered.length} / ${list.length} channels`;
 
   return (
     <main className="min-h-screen max-w-6xl mx-auto px-4 pb-16 text-lg">
@@ -202,8 +221,33 @@ export default function Home() {
           >
             <Heart className={`w-5 h-5 ${onlyFav ? "fill-current" : ""}`} /> Fav ({favs.length})
           </button>
-          <span className="text-base opacity-60">{filtered.length} channels</span>
-        </div>
+            <span className="text-base opacity-60">{totalShown}</span>
+          </div>
+
+          {tab === "free" && countries.length > 0 && (
+            <div className="mt-3">
+              <p className="text-base font-bold mb-2">Country</p>
+              <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+                <button
+                  onClick={() => setCountry("ALL")}
+                  className={`shrink-0 px-4 py-2 rounded-full text-base font-semibold border-2 ${country === "ALL" ? "bg-green-600 text-white border-green-600" : "border-slate-300 dark:border-slate-700"}`}
+                >
+                  All Countries
+                </button>
+                {countries.map((c) => (
+                  <button
+                    key={c.cc}
+                    onClick={() => setCountry(country === c.cc ? "ALL" : c.cc)}
+                    className={`shrink-0 px-4 py-2 rounded-full text-base font-semibold border-2 ${country === c.cc ? "bg-green-600 text-white border-green-600" : "border-slate-300 dark:border-slate-700"}`}
+                  >
+                    {c.name} ({c.count})
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <p className="text-base font-bold mt-4 mb-2">Category</p>
 
         <div className="flex gap-2 mt-3 overflow-x-auto pb-2 -mx-1 px-1">
           {groups.map((g) => (

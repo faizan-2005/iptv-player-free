@@ -4,6 +4,9 @@ import { spawnSync } from "child_process";
 const api = new URL("../app/api", import.meta.url);
 const bak = new URL("../app.api.bak", import.meta.url);
 
+const fetchStep = spawnSync("node", ["scripts/fetch-playlist.mjs"], { stdio: "inherit", shell: true });
+if (fetchStep.status !== 0) process.exit(fetchStep.status ?? 1);
+
 let moved = false;
 try {
   await access(api);
