@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import Player from "../../components/player";
 import { playUrl } from "../../lib/playback";
+import { APP_VERSION } from "../../lib/version";
 
 function PlayInner() {
   const params = useSearchParams();
@@ -54,6 +55,10 @@ function PlayInner() {
           </Link>
         </section>
       )}
+
+      <footer className="text-center mt-8">
+        <p className="text-sm opacity-40">Faizan TV v{APP_VERSION}</p>
+      </footer>
     </main>
   );
 }

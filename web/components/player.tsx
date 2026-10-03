@@ -46,6 +46,7 @@ export default function Player({ src }: { src: string }) {
   const [controls, setControls] = useState(true);
   const [menu, setMenu] = useState<"none" | "speed" | "quality" | "audio">("none");
   const [resumeAt, setResumeAt] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [flash, setFlash] = useState("");
   const [error, setError] = useState("");
   const [isFull, setIsFull] = useState(false);
@@ -74,10 +75,24 @@ export default function Player({ src }: { src: string }) {
       if (saved > 10) setResumeAt(saved);
     } catch {}
 
-    const fail = (msg: string) => setError(msg);
+    const fail = (msg: string) => {
+      setLoading(false);
+      setError(msg);
+    };
     const onMeta = () => setDur(video.duration || 0);
-    const onPlay = () => setPlaying(true);
+    const onPlay = () => {
+      setPlaying(true);
+      setLoading(false);
+    };
     const onPause = () => setPlaying(false);
+    const onWaiting = () => {
+      if (!video.paused) setLoading(true);
+    };
+    const onCanPlay = () => setLoading(false);
+    const onLoadStart = () => {
+      setLoading(true);
+      setPlaying(false);
+    };
     const onVol = () => {
       setMuted(video.muted);
       setVolume(video.volume);
@@ -99,6 +114,9 @@ export default function Player({ src }: { src: string }) {
     video.addEventListener("loadedmetadata", onMeta);
     video.addEventListener("play", onPlay);
     video.addEventListener("pause", onPause);
+    video.addEventListener("waiting", onWaiting);
+    video.addEventListener("canplay", onCanPlay);
+    video.addEventListener("loadstart", onLoadStart);
     video.addEventListener("volumechange", onVol);
     video.addEventListener("ratechange", onRate);
     video.addEventListener("timeupdate", onTime);
@@ -138,6 +156,9 @@ export default function Player({ src }: { src: string }) {
       video.removeEventListener("loadedmetadata", onMeta);
       video.removeEventListener("play", onPlay);
       video.removeEventListener("pause", onPause);
+      video.removeEventListener("waiting", onWaiting);
+      video.removeEventListener("canplay", onCanPlay);
+      video.removeEventListener("loadstart", onLoadStart);
       video.removeEventListener("volumechange", onVol);
       video.removeEventListener("ratechange", onRate);
       video.removeEventListener("timeupdate", onTime);
@@ -263,13 +284,19 @@ export default function Player({ src }: { src: string }) {
       <button className="absolute left-0 top-0 bottom-16 w-[30%]" onClick={() => tapZone("left")} aria-label="10 second peeche" />
       <button className="absolute right-0 top-0 bottom-16 w-[30%]" onClick={() => tapZone("right")} aria-label="10 second aage" />
 
+      {loading && error === "" && (
+        <div className="absolute inset-0 grid place-items-center pointer-events-none">
+          <span className="w-16 h-16 rounded-full border-4 border-white/20 border-t-white animate-spin" />
+        </div>
+      )}
+
       {flash !== "" && (
         <div className="absolute inset-0 grid place-items-center pointer-events-none">
           <span className="px-5 py-2 rounded-full bg-black/70 text-white text-xl font-bold">{flash}</span>
         </div>
       )}
 
-      {!playing && error === "" && (
+      {!playing && !loading && error === "" && (
         <button onClick={togglePlay} className="absolute inset-0 grid place-items-center" aria-label="Play">
           <span className="p-6 rounded-none bg-blue-600 text-white shadow-xl">
             <Play className="w-12 h-12 fill-current" />

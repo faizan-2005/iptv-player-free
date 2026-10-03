@@ -4,6 +4,7 @@ import { Heart, Moon, Play, Plus, Search, Sun, Tv, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { proxyUrl } from "../lib/playback";
+import { APP_VERSION } from "../lib/version";
 
 type Channel = {
   name: string;
@@ -288,6 +289,10 @@ export default function Home() {
         </div>
         {filtered.length === 0 && <p className="text-center text-lg opacity-60 py-8">Kuch nahi mila</p>}
       </section>
+
+      <footer className="text-center mt-8">
+        <p className="text-sm opacity-40">Faizan TV v{APP_VERSION}</p>
+      </footer>
     </main>
   );
 }
